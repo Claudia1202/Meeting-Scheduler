@@ -300,6 +300,89 @@ def schedule_meeting_w():
     submit_button = Button(schedule_meeting_window, text="Submit", font=('Georgia', 12), fg='#FFFFFF', bg="#FFC0CB", command=submit2)
     submit_button.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
 
+######### A TREIA COMANDA #########
+
+def display_meetings(conn, start_time, end_time):
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""SELECT * FROM Meeting
+                          WHERE StartDateTime >= %s AND EndDateTime <= %s;""", 
+                          (start_time, end_time))
+        meetings = cursor.fetchall()
+        return meetings
+        #messagebox.showinfo("Display Meetings", meeting_info)
+    except psycopg2.Error as e:
+        print(f"An error occurred: {e}")
+    finally:
+        cursor.close()
+
+def display_meetings_w():
+
+    def export_meetings_to_ics():
+        pass
+
+    def is_valid_date(data):
+            try:
+                datetime.strptime(data, '%Y-%m-%d %H:%M:%S')
+                return True
+            except ValueError:
+                return False
+    def show():
+        
+        start_interval = start_time_entry.get()
+        end_interval = end_time_entry.get()
+        meetings = display_meetings(conn, start_time_entry.get(), end_time_entry.get())
+
+        if not (is_valid_date(start_interval) and is_valid_date(end_interval)):
+            messagebox.showerror("Error", "Invalid date format. Please use YYYY-MM-DD HH:MM:SS.")
+            return
+
+    # fereastra display_meetings
+        show_meetings_window = Toplevel(root)
+        show_meetings_window.title("Meetings from " + start_interval + " to " + end_interval)
+        show_meetings_window.configure(bg="#FFC0CB")
+        show_meetings_window.geometry("500x400")  
+    
+        if not meetings:
+            Label(show_meetings_window, text="No meetings found in the given interval.", bg="#FFC0CB", fg="white").pack()
+    
+        for meeting in meetings:
+            meeting_id, start, end, subject = meeting
+            meeting_info = f"ID: {meeting_id}, Start: {start}, End: {end}, Subject: {subject}"
+            Label(show_meetings_window, text=meeting_info, bg="#FFC0CB", fg="white").pack()
+        
+        file_name = Label(show_meetings_window, text="FILENAME", font=('Georgia', 12), fg='#FFFFFF', bg="#FFC0CB")
+        file_name.pack()
+        file_name_entry = Entry(show_meetings_window)
+        file_name_entry.pack()
+
+        export_button = Button(show_meetings_window, text="EXPORT", font=('Georgia', 12), fg='#FFFFFF', bg="#FFC0CB", command=lambda: export_meetings_to_ics())
+        export_button.pack()
+# fereastra display_meetings care se deschide din meniu
+    display_meetings_window = Toplevel()
+    display_meetings_window.title("Display Meetings")
+    display_meetings_window.configure(bg="#FFC0CB")
+    display_meetings_window.geometry("400x250")
+
+    start_time = Label(display_meetings_window, text="START TIME:", font=('Georgia', 12), fg='#FFFFFF', bg="#FFC0CB")
+    start_time.grid(row=0, column=0, padx=10, pady=10)
+    start_time_entry = Entry(display_meetings_window)
+    start_time_entry.grid(row=0, column=1, padx=10, pady=10)
+
+    end_time = Label(display_meetings_window, text="END TIME:", font=('Georgia', 12), fg='#FFFFFF', bg="#FFC0CB")
+    end_time.grid(row=1, column=0, padx=10, pady=10)
+    end_time_entry = Entry(display_meetings_window)
+    end_time_entry.grid(row=1, column=1, padx=10, pady=10)
+
+    # buton show 
+    show_button = Button(display_meetings_window, text="SHOW", font=('Georgia', 12), fg='#FFFFFF', bg="#FFC0CB", command=show)
+    show_button.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
+
+
+conn = get_connection()
+
+##### IMPORT DIN FISIER ICS IN BAZA DE DATE  #####
+#######
 
 ####### MENIU PRINCIPAL #######
 root = tk.Tk()
@@ -313,10 +396,10 @@ title.pack(pady=70)
 button1 = tk.Button(root, text="Add New Person", font=('Georgia', 12), height=1, width=19, fg='#FFFFFF', bg='#CD8C95', command=add_person_w)
 button1.pack(pady=10)
 
-button2 = tk.Button(root, text="Add New Meeting", font=('Georgia', 12),  height=1, width=19, fg='#FFFFFF', bg='#CD8C95')
+button2 = tk.Button(root, text="Add New Meeting", font=('Georgia', 12),  height=1, width=19, fg='#FFFFFF', bg='#CD8C95', command=schedule_meeting_w)
 button2.pack(pady=10)
 
-button3 = tk.Button(root, text="Display Meetings", font=('Georgia', 12),  height=1, width=19, fg='#FFFFFF', bg='#CD8C95')
+button3 = tk.Button(root, text="Display Meetings", font=('Georgia', 12),  height=1, width=19, fg='#FFFFFF', bg='#CD8C95', command=display_meetings_w)
 button3.pack(pady=10)
 
 

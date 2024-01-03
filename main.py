@@ -4,7 +4,11 @@ import tkinter as tk
 from tkinter import Toplevel, Label, Entry, Button, messagebox
 import re
 from datetime import datetime
+from icalendar import Calendar, Event
+import pytz
+import os
 
+filepath = r"C:\Users\Claudia\Documents\Python-teme"
 
 #clasele 
 
@@ -198,6 +202,7 @@ def schedule_meeting_w():
         finally:
             cursor.close()
 
+#lista completa cu participanti
     def see_list():
         participants_list_window = Toplevel()
         participants_list_window.title("All Participants")
@@ -318,8 +323,30 @@ def display_meetings(conn, start_time, end_time):
 
 def display_meetings_w():
 
-    def export_meetings_to_ics():
-        pass
+    # EXPORT IN FISIER CU EXTENSIA ICS 
+    def export_meetings_to_ics(meetings, file_path, file_name_entry):    
+
+        try:
+
+            filename = file_name_entry.get()
+            new_path = os.path.join(file_path, filename)
+            cal = Calendar()
+
+            for meeting in meetings:
+                event = Event()
+                event.add('summary', meeting[3])  # meeting subject
+                event.add('dtstart', meeting[1])  # start time
+                event.add('dtend', meeting[2])    # end time
+                event.add('dtstamp', datetime.now(pytz.utc))  
+                cal.add_component(event)
+
+            with open(new_path, 'wb') as f:
+                f.write(cal.to_ical())
+            messagebox.showinfo("Success", "Export completed successfully and saved to " + file_path)
+
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+
 
     def is_valid_date(data):
             try:
@@ -382,9 +409,72 @@ def display_meetings_w():
 conn = get_connection()
 
 ##### IMPORT DIN FISIER ICS IN BAZA DE DATE  #####
-#######
+
+def import_meetings_w():
+     
+    def import_meetings(file_path, filename_entry):
+        filename = filename_entry.get()
+        new_path = os.path.join(file_path, filename)
+        
+        try:
+            with open(new_path, 'rb') as f:
+                ics_content = f.read()
+
+            cal = Calendar.from_ical(ics_content)
+            count = 0 #cate evenimente s au importat
+
+            for component in cal.walk('VEVENT'):
+                start_time = component.get('dtstart').dt
+                end_time = component.get('dtend').dt
+                subject = component.get('summary')
+            # participanti
+                participanti = component.get('attendee')
+                participant_ids = []
+
+                if participanti:
+                    if not isinstance(participanti, list):
+                        participanti = [participanti]
+                    
+                    for participant in participanti:
+                        email = str(participant).split(':')[-1]
+                # cautam participantul in baza de date
+                        try:
+                            cursor = conn.cursor()
+                            cursor.execute("SELECT PersonID FROM Person WHERE Email = %s;", (email,))
+                            person = cursor.fetchone()
+                            if person:
+                                participant_ids.append(person[0])
+                            cursor.close()
+                        except psycopg2.Error as e:
+                            print(f"Error finding participant in database: {e}")
+
+                Imported_Meeting = Meeting(start_time, end_time, subject, participant_ids)
+                schedule_meeting(conn, Imported_Meeting)
+                count += 1 
+
+            messagebox.showinfo("Success", f"Successfully imported {count} meeting(s) from {filename}.")
+        except Exception as e:
+            messagebox.showerror("Import Failed", f"Failed to import meetings due to error: {e}")
+
+
+
+    import_meetings_window = Toplevel()
+    import_meetings_window.title("Import Meetings")
+    import_meetings_window.configure(bg="#FFC0CB")
+    import_meetings_window.geometry("400x250")
+
+    filename = Label(import_meetings_window, text="FILE NAME:", font=('Georgia', 12), fg='#FFFFFF', bg="#FFC0CB")
+    filename.grid(row=0, column=0, padx=10, pady=10)
+    filename_entry = Entry(import_meetings_window)
+    filename_entry.grid(row=0, column=1, padx=10, pady=10)
+
+    import_button = Button(import_meetings_window, text="IMPORT", font=('Georgia', 12), fg='#FFFFFF', bg="#FFC0CB", command=lambda: import_meetings(filepath, filename_entry)
+)
+    import_button.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
+
 
 ####### MENIU PRINCIPAL #######
+    
 root = tk.Tk()
 root.geometry("800x500")
 root.title("Meeting Scheduler")

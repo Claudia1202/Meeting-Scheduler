@@ -1,6 +1,9 @@
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+"""Functia care creeaza baza de date(daca nu exista deja) postgres cu tabelele Person (persoanele care participa la meetings), Meetings (sedintele cu data, ora si participanti) 
+si MeetingParticipants (tine evidenta participantilor la fiecare sedinta)
+"""
 def create_database():
     host = "localhost"
     dbname = "postgres"
@@ -17,14 +20,14 @@ def create_database():
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cursor = conn.cursor()
 
-        # Check if the database already exists
+        # verific daca exista deja baza de date
         cursor.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = 'meeting_db'")
         exists = cursor.fetchone()
         if not exists:
             cursor.execute("CREATE DATABASE meeting_db;")
-            print("Database created successfully")
+            print("Database created successfully!")
         else:
-             print("Database already exists")
+             print("Database already exists!")
 
     except Exception as e:
         print("An error occurred:", e)

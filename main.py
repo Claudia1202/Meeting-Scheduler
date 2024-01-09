@@ -66,9 +66,9 @@ def get_connection():
         print(f"Error connecting to the database: {e}")
         return None
     
-background_color = "#ECE2F0" 
-darker_color = "#957DAD"  
-text_color = "#333333"  
+background_color = "#AED6F1" 
+darker_color = "#2E86C1"  
+text_color = "#000000"  
 font_style = "Raleway"
 font_size = 12
 
@@ -88,7 +88,7 @@ def add_person(conn, person):
         cursor.execute("""INSERT INTO Person (FirstName, LastName, Email)
                           VALUES (%s, %s, %s) RETURNING PersonID;""", 
                           (person.FirstName, person.LastName, person.email))
-        person_id = cursor.fetchone()[0]
+        person_id = cursor.fetchone()[0]   
         conn.commit()
     except psycopg2.Error as e:
         print(f"An error occurred: {e}")
@@ -304,9 +304,17 @@ def schedule_meeting_w():
             count_rows = 0
             for row in rows:
                 person_id, first_name, last_name = row
-                label = Label(participants_list_window, text=f"ID: {person_id}, Name: {first_name} {last_name}", bg=background_color, fg=text_color)
-                label.grid(row=count_rows, sticky="w", padx=10, pady=5)
+
+                # Eticheta pentru ID
+                id_label = Label(participants_list_window, text=f"ID: {person_id}", bg=background_color, fg=text_color)
+                id_label.grid(row=count_rows, column=0, sticky="w", padx=10, pady=5)
+
+                # Eticheta pentru Nume
+                name_label = Label(participants_list_window, text=f"NUME: {first_name} {last_name}", bg=background_color, fg=text_color)
+                name_label.grid(row=count_rows, column=1, sticky="w", padx=10, pady=5)
+
                 count_rows += 1
+
                 
         except psycopg2.Error as e:
             messagebox.showerror("Database Error", f"An error occurred: {e}")
@@ -437,7 +445,7 @@ def display_meetings_w():
     Permite exportul sedintelor in format .ics.
     """
     # EXPORT IN FISIER CU EXTENSIA ICS 
-    def export_meetings_to_ics(meetings, file_path, file_name_entry):    
+    def export_meetings_to_ics(meetings, file_path, file_name_entry, window1, window2, window3):    
         """
         Exporta sedintele selectate din baza de date intr-un fisier .ics specificat.
 
@@ -463,7 +471,9 @@ def display_meetings_w():
             with open(new_path, "wb") as f:
                 f.write(cal.to_ical())
             messagebox.showinfo("Success", "Export completed successfully and saved to " + file_path)
-
+            window1.destroy()
+            window2.destroy()
+            window3.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 
@@ -498,7 +508,7 @@ def display_meetings_w():
         show_meetings_window = Toplevel(root)
         show_meetings_window.title("Meetings from " + start_interval + " to " + end_interval)
         show_meetings_window.configure(bg=background_color)
-        show_meetings_window.geometry("500x400")  
+        show_meetings_window.geometry("600x400")  
 
         main_frame = Frame(show_meetings_window, bg=background_color)
         main_frame.pack(padx=10, pady=10, fill="both", expand=True)
@@ -513,19 +523,55 @@ def display_meetings_w():
         count_rows = 0
         for meeting in meetings:
             meeting_id, start, end, subject = meeting
-            meeting_info = f"ID: {meeting_id}, Start: {start}, End: {end}, Subject: {subject}"
-            Label(entry_frame, text=meeting_info, bg=background_color, fg=text_color).grid(sticky="w")
+
+            # Eticheta pentru ID
+            id_label = Label(entry_frame, text=f"ID: {meeting_id}", bg=background_color, fg=text_color)
+            id_label.grid(row=count_rows, column=0, sticky="w", padx=10, pady=5)
+
+            # Eticheta pentru Start
+            start_label = Label(entry_frame, text=f"START: {start}", bg=background_color, fg=text_color)
+            start_label.grid(row=count_rows, column=1, sticky="w", padx=10, pady=5)
+
+            # Eticheta pentru End
+            end_label = Label(entry_frame, text=f"END: {end}", bg=background_color, fg=text_color)
+            end_label.grid(row=count_rows, column=2, sticky="w", padx=10, pady=5)
+
+            # Eticheta pentru Subject
+            subject_label = Label(entry_frame, text=f"SUBJECT: {subject}", bg=background_color, fg=text_color)
+            subject_label.grid(row=count_rows, column=3, sticky="w", padx=10, pady=5)
+
+            count_rows += 1
+
 
         button_frame = Frame(main_frame, bg=background_color)
         button_frame.pack(side="bottom", pady=10, fill="x")  
 
-        file_name = Label(button_frame, text="Filename", font=(font_style, 11), fg=text_color, bg=background_color)
-        file_name.pack(side="top", anchor='w')  
-        file_name_entry = Entry(button_frame)
-        file_name_entry.pack(side="top", anchor='w', pady=10)  
+        # file_name = Label(button_frame, text="Filename", font=(font_style, 11), fg=text_color, bg=background_color)
+        # file_name.pack(side="top", anchor='w')  
+        # file_name_entry = Entry(button_frame)
+        # file_name_entry.pack(side="top", anchor='w', pady=10)  
 
-        export_button = Button(button_frame, text="EXPORT", font=(font_style, font_size), fg=text_color, bg=darker_color, command=lambda: export_meetings_to_ics(meetings, filepath, file_name_entry))
-        export_button.pack(side="top")
+        def open_export_window():
+            export_window = Toplevel()
+            export_window.title("Export Meetings")
+            export_window.geometry("300x200")
+            export_window.configure(bg=background_color)
+
+             # Crearea unui frame pentru label și entry
+            input_frame = Frame(export_window, bg=background_color)
+            input_frame.pack(side="top", padx=10, pady=10)
+
+            filename_label = Label(input_frame, text="FILENAME:", font=(font_style, 11), fg=text_color, bg=background_color)
+            filename_label.pack(side="left", padx=5)
+
+            filename_entry = Entry(input_frame)
+            filename_entry.pack(side="left", padx=5)
+
+            export_button = Button(export_window, text="EXPORT", font=(font_style, font_size), fg=text_color, bg=darker_color, command=lambda: export_meetings_to_ics(meetings, filepath, filename_entry, display_meetings_window, show_meetings_window, export_window))
+            export_button.pack(side="bottom", pady=20)
+
+        export_button = Button(button_frame, text="EXPORT", font=(font_style, font_size), fg=text_color, bg=darker_color, command=open_export_window)
+        export_button.pack(side="bottom")
 
 
 
@@ -568,7 +614,7 @@ def import_meetings_w():
      
     def import_meetings(file_path, filename_entry):
         """
-        Importa sedintele dintr-un fisier .ics specificat in baza de date.
+        Importa in baza de date sedintele dintr-un fisier .ics specificat.
 
         Parametri:
             file_path (str): Calea catre fisierul .ics.
@@ -618,7 +664,7 @@ def import_meetings_w():
             messagebox.showerror("Import Failed", f"Failed to import meetings due to error: {e}")
 
 
-
+# fereastra de import
     import_meetings_window = Toplevel()
     import_meetings_window.title("Import Meetings")
     import_meetings_window.configure(bg=background_color)

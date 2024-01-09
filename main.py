@@ -66,12 +66,14 @@ def get_connection():
         print(f"Error connecting to the database: {e}")
         return None
     
+# DESIGN
 background_color = "#AED6F1" 
 darker_color = "#2E86C1"  
 text_color = "#000000"  
 font_style = "Raleway"
 font_size = 12
 
+#CONEXIUNE CU BD
 conn = get_connection()
 
 ######## PRIMA COMANDA ########
@@ -81,7 +83,7 @@ def add_person(conn, person):
         conn: conexiunea cu baza de date.
         person (Person): obiectul Person de adaugat in baza de date.
     """
-# FUNCTII VALIDARE INFO
+ # FUNCTII VALIDARE INFO
 
     cursor = conn.cursor()
     try:
@@ -544,12 +546,7 @@ def display_meetings_w():
 
 
         button_frame = Frame(main_frame, bg=background_color)
-        button_frame.pack(side="bottom", pady=10, fill="x")  
-
-        # file_name = Label(button_frame, text="Filename", font=(font_style, 11), fg=text_color, bg=background_color)
-        # file_name.pack(side="top", anchor='w')  
-        # file_name_entry = Entry(button_frame)
-        # file_name_entry.pack(side="top", anchor='w', pady=10)  
+        button_frame.pack(side="bottom", pady=10, fill="x")    
 
         def open_export_window():
             export_window = Toplevel()
